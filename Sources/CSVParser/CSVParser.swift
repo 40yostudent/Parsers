@@ -74,9 +74,11 @@ public struct CSVParser {
                 result[linenumber].append(currentWord)
                 currentWord = ""
             case .q2:
-                currentWord.insert(currentChar, at: currentWord.endIndex)
+                if currentChar != "\"" {
+                    currentWord.insert(currentChar, at: currentWord.endIndex)
+                }
             case .q3:
-                continue
+                break
             case .q4:
                 currentWord.insert(currentChar, at: currentWord.endIndex)
             default:

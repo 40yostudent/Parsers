@@ -27,6 +27,16 @@ final class CSVParserTests: XCTestCase {
                           ["I mercanti dello spazio", "Frederik Pohl, C. M. Kornbluth", "Mondadori"]]
         XCTAssertEqual(CSVParser().parse(testableCSV), testOutput)
     }
+    
+    func testBasicQuotedCSV() throws {
+        let testableCSV = """
+        A;B;C
+        "1";2;3
+        4;"5";6
+        """
+        let testOutput = [["A", "B", "C"], ["1", "2", "3"], ["4", "5", "6"]]
+        XCTAssertEqual(CSVParser().parse(testableCSV), testOutput)
+    }
 
     func testQuotedCSV() throws {
         let testableCSV = """
