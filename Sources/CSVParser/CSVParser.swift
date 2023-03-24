@@ -1,19 +1,14 @@
 public struct CSVParser {
     
 // FSA for CSV parsing
-// states:
-// q1: start field
-// q2: scan quoted field
-// q3: end scan quoted field
-// q4: scan field
 //
 //     ┌─sep─┐                        ┌!quo┐
 //     │     │                        ▼    │
 //     │  ╔════╗                   ┌────┐  │
-//     ├─▶║ q1 ║────────quo───────▶│ q2 │──┘
-//     │  ╚════╝                   └────┘
-//     │     ▲                        │
-//   !sep    │         ╔════╗         │
+//     ├─▶║ q1 ║────────quo───────▶│ q2 │──┘        q1: start field
+//     │  ╚════╝                   └────┘           q2: scan quoted field
+//     │     ▲                        │             q3: end scan quoted field
+//   !sep    │         ╔════╗         │             q4: scan field
 //   !quo  sep─────────║ q3 ║◀──────quo
 //     │     │         ╚════╝
 //     │  ╔════╗          │
@@ -23,7 +18,8 @@ public struct CSVParser {
 //           └!sep┘
 //
     
-    public func parse(_ input: String, separator: Character = ";", headings: Bool = false) -> [String : [String]] {
+    public func parse(_ input: String, separator: Character = ";") -> [[String]] {
+        
         enum State {
             case q1, q2, q3, q4, err
         }
@@ -37,6 +33,8 @@ public struct CSVParser {
                     result = .q1
                 } else if input == "\"" {
                     result = .q2
+                } else {
+                    result = .q4
                 }
             case .q2:
                 if input != "\"" {
@@ -66,70 +64,48 @@ public struct CSVParser {
         var currentIndex = input.startIndex
         var currentState = State.q1
         var currentWord = ""
-        var result: [String : [String]] = [:]
-        
-        // parse headings
-        // TODO: check id headings == true
-        var endOfLine = false
-        while !endOfLine {
-            let currentChar: Character = input[currentIndex]
-            currentState = fsa(currentState, currentChar)
-            
-            switch currentState {
-            case .q1:
-                result[currentWord] = []
-                currentWord = ""
-            case .q2:
-                currentWord.insert(currentChar, at: currentWord.endIndex)
-            case .q3:
-                continue
-            case .q4:
-                currentWord.insert(currentChar, at: currentWord.endIndex)
-            default:
-                fatalError(".err state reached")
-            }
-            
-            currentIndex = input.index(after: currentIndex)
-            if input[currentIndex] == "\n" {
-                endOfLine = true
-            }
-        }
+        var result: [[String]] = []
         
         // parse csv values
-        // while not endoffile...
-        // while not endofline...
-        // add values to the corresponding arrays
+        var linenumber = 0
+        while currentIndex < input.endIndex {
+            result.append([String]())
+            
+            var endOfLine = false
+            while !endOfLine && currentIndex < input.endIndex {
+                let currentChar: Character = input[currentIndex]
+                
+                if currentChar == "\n" {
+                    currentState = .q1
+                    endOfLine = true
+                } else {
+                    currentState = fsa(currentState, currentChar)
+                }
+                
+                switch currentState {
+                case .q1:
+                    result[linenumber].append(currentWord)
+                    currentWord = ""
+                case .q2:
+                    currentWord.insert(currentChar, at: currentWord.endIndex)
+                case .q3:
+                    continue
+                case .q4:
+                    currentWord.insert(currentChar, at: currentWord.endIndex)
+                default:
+                    print(".err state reached")
+                }
+                
+                currentIndex = input.index(after: currentIndex)
+            }
+            
+            linenumber += 1
+        }
         
+        if currentState == .q2 {
+            fatalError("End of file reached before closing quotes")
+        }
+        result[linenumber-1].append(currentWord) // QUESTO FA SCHIFO
         return result
     }
-
-//    public func parse(_ input: String) -> [String : [String]] {
-//        // prendi la prima riga e fai le intestazioni
-//        let separator: Character = ";" // TODO: this should be set as a CSV property while initializing the parser
-//        var currentIndex = input.startIndex
-//        var currentWord = ""
-//        var headings = [String]()
-//    firstLine: while currentIndex != input.endIndex {
-//        let currentChar: Character = input[currentIndex]
-//
-//        switch currentChar {
-//        case separator:
-//            headings.append(currentWord)
-//            currentWord = ""
-//            continue firstLine
-//        case "\n":
-//            break firstLine
-//        case "\"":
-//            // wait for another one
-//        default:
-//            currentWord.insert(currentChar, at: currentWord.endIndex)
-//        }
-//
-//            currentIndex = input.index(after: currentIndex)
-//        }
-//
-//        // components è in foundation, si prova a fare characters uno alla volta. Usare FSA.
-//
-//        // vai ciclicamente sulle altre righe e riempi gli arrays
-//    }
 }

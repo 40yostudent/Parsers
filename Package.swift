@@ -27,5 +27,8 @@ let package = Package(
         .testTarget(
             name: "ParsersTests",
             dependencies: ["Parsers"]),
+        .testTarget(
+            name: "CSVParserTests",
+            dependencies: ["CSVParser"]),
     ]
 )

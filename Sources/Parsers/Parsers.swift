@@ -1,13 +1,11 @@
 import CSVParser
 
 public struct Parsers {
-    public enum FileType {
+    public enum Format {
         case csv, json, xml, jsonfeed, rss
     }
     
-    private let fileType: FileType
-
-    public init(fileType: FileType) {
-        self.fileType = fileType
+    public func parse(input: String, format: Format) {
+        
     }
 }
